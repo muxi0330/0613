@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ '支出详情' if page == 'detail' else ('历史查询' if page == 'history' else '记账本') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app">
+        <!-- ========== HOME PAGE ========== -->
+        <div id="pageHome"{% if page != 'home' %} style="display:none"{% endif %}>
+            <header class="app-header">
+                <div class="header-inner">
+                    <h1 class="app-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                        记账本
+                    </h1>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" id="searchInput" placeholder="搜索名称/备注...">
+                        <button class="icon-btn" id="customizeBtn" title="自定义模块">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="customize-dropdown" id="customizeDropdown">
+                    <div class="dropdown-title">选择要显示的模块</div>
+                    <label class="dropdown-item"><input type="checkbox" data-card="day" checked> 本日支出</label>
+                    <label class="dropdown-item"><input type="checkbox" data-card="month" checked> 本月支出</label>
+                    <label class="dropdown-item"><input type="checkbox" data-card="all" checked> 累计支出</label>
+                    <label class="dropdown-item"><input type="checkbox" data-card="count" checked> 记录数</label>
+                    <label class="dropdown-item"><input type="checkbox" data-card="day_income" checked> 本日收入</label>
+                    <label class="dropdown-item"><input type="checkbox" data-card="month_income" checked> 本月收入</label>
+                    <label class="dropdown-item"><input type="checkbox" data-card="all_income" checked> 累计收入</label>
+                    <label class="dropdown-item"><input type="checkbox" data-card="income_count" checked> 收入笔数</label>
+                    <button class="btn btn-primary btn-small dropdown-done" id="dropdownDone">完成</button>
+                </div>
+            </header>
+
+            <div class="summary-cards" id="summaryCards">
+                <div class="card card-today clickable" data-card="day" data-scope="day" data-type="expense">
+                    <div class="card-label">本日支出</div>
+                    <div class="card-value" id="dayTotal">¥0.00</div>
+                </div>
+                <div class="card card-primary clickable" data-card="month" data-scope="month" data-type="expense">
+                    <div class="card-label">本月支出</div>
+                    <div class="card-value" id="monthTotal">¥0.00</div>
+                </div>
+                <div class="card card-secondary clickable" data-card="all" data-scope="all" data-type="expense">
+                    <div class="card-label">累计支出</div>
+                    <div class="card-value" id="allTotal">¥0.00</div>
+                </div>
+                <div class="card card-accent" data-card="count">
+                    <div class="card-label">记录数</div>
+                    <div class="card-value" id="recordCount">0 笔</div>
+                </div>
+                <div class="card card-income-day clickable" data-card="day_income" data-scope="day" data-type="income">
+                    <div class="card-label">本日收入</div>
+                    <div class="card-value" id="dayIncomeTotal">¥0.00</div>
+                </div>
+                <div class="card card-income-month clickable" data-card="month_income" data-scope="month" data-type="income">
+                    <div class="card-label">本月收入</div>
+                    <div class="card-value" id="monthIncomeTotal">¥0.00</div>
+                </div>
+                <div class="card card-income-all clickable" data-card="all_income" data-scope="all" data-type="income">
+                    <div class="card-label">累计收入</div>
+                    <div class="card-value" id="allIncomeTotal">¥0.00</div>
+                </div>
+                <div class="card card-income-count" data-card="income_count">
+                    <div class="card-label">收入笔数</div>
+                    <div class="card-value" id="incomeCount">0 笔</div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <select class="filter-select" id="categoryFilter">
+                    <option value="">全部分类</option>
+                    <option value="餐饮">🍽 餐饮</option>
+                    <option value="交通">🚗 交通</option>
+                    <option value="购物">🛍 购物</option>
+                    <option value="娱乐">🎮 娱乐</option>
+                    <option value="居住">🏠 居住</option>
+                    <option value="医疗">💊 医疗</option>
+                    <option value="教育">📚 教育</option>
+                    <option value="其他">📌 其他</option>
+                </select>
+                <button class="icon-btn" id="historyBtn" title="历史查询">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </button>
+            </div>
+
+            <div class="expense-list" id="expenseList">
+                <div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <p>还没有记账记录</p><p class="empty-hint">点击右下角按钮添加第一笔账单</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== DETAIL PAGE ========== -->
+        <div id="pageDetail"{% if page != 'detail' %} style="display:none"{% endif %}>
+            <header class="app-header">
+                <div class="header-inner">
+                    <button class="back-btn" id="detailBackBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <h1 class="app-title" id="detailTitle">支出详情</h1>
+                    <div class="detail-scope-tabs">
+                        <button class="scope-tab" data-scope="day">本日</button>
+                        <button class="scope-tab" data-scope="month">本月</button>
+                        <button class="scope-tab" data-scope="all">全部</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="detail-total" id="detailTotal">¥0.00</div>
+            <div class="type-toggle detail-toggle">
+                <button class="type-btn active" data-chart="expense" id="chartTypeExpense">📤 支出</button>
+                <button class="type-btn" data-chart="income" id="chartTypeIncome">📥 收入</button>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">分类占比</h3>
+                <div class="chart-row">
+                    <canvas id="pieChart" width="220" height="220"></canvas>
+                    <div class="chart-legend" id="pieLegend"></div>
+                </div>
+            </div>
+
+            <div class="chart-container" id="barChartContainer">
+                <h3 class="chart-title" id="barChartTitle">每日支出趋势</h3>
+                <canvas id="barChart" width="600" height="220"></canvas>
+            </div>
+
+            <div class="expense-list" id="detailExpenseList"></div>
+        </div>
+
+        <!-- ========== HISTORY PAGE ========== -->
+        <div id="pageHistory"{% if page != 'history' %} style="display:none"{% endif %}>
+            <header class="app-header">
+                <div class="header-inner">
+                    <button class="back-btn" id="historyBackBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <h1 class="app-title">历史查询</h1>
+                </div>
+            </header>
+
+            <div class="history-filters">
+                <div class="form-row">
+                    <div class="form-group"><label>开始日期</label><input type="date" id="hFrom"></div>
+                    <div class="form-group"><label>结束日期</label><input type="date" id="hTo"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>分类</label>
+                        <select id="hCategory">
+                            <option value="">全部</option>
+                            <option value="餐饮">餐饮</option><option value="交通">交通</option>
+                            <option value="购物">购物</option><option value="娱乐">娱乐</option>
+                            <option value="居住">居住</option><option value="医疗">医疗</option>
+                            <option value="教育">教育</option><option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>快速选择</label>
+                        <select id="hQuickMonth">
+                            <option value="">自定义</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-full" id="hSearchBtn">查询</button>
+            </div>
+
+            <div class="history-summary" id="hSummary" style="display:none;">
+                <span>共 <b id="hCount">0</b> 笔，合计 <b id="hTotal">¥0.00</b></span>
+            </div>
+
+            <div class="expense-list" id="historyExpenseList">
+                <div class="empty-state"><p>请选择日期范围进行查询</p></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fab" id="fabBtn" title="添加账单">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+
+    <!-- Add Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <div class="modal-header"><h2>添加账单</h2><button class="modal-close" id="modalClose">&times;</button></div>
+            <div class="modal-body">
+                <div class="modal-tabs">
+                    <button class="modal-tab active" data-tab="ocr">📷 拍照识别</button>
+                    <button class="modal-tab" data-tab="manual">✏️ 手动输入</button>
+                </div>
+
+                <div class="modal-tab-content active" id="tabOcr">
+                    <div class="ocr-upload-area" id="ocrUploadArea">
+                        <div class="ocr-upload-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        </div>
+                        <p class="ocr-upload-text">点击或拖拽上传收据/发票照片</p>
+                        <p class="ocr-upload-hint">自动识别金额、日期、类别和名称</p>
+                        <input type="file" id="ocrFileInput" accept="image/*" hidden>
+                    </div>
+                    <div class="ocr-status" id="ocrStatus" style="display:none;">
+                        <div class="ocr-preview" id="ocrPreview"></div>
+                        <div class="ocr-loading" id="ocrLoading"><div class="spinner"></div><p>正在识别中...</p></div>
+                    </div>
+                    <div class="ocr-result-form" id="ocrResultForm" style="display:none;">
+                        <div class="type-toggle">
+                            <button class="type-btn active" data-type="expense" id="ocrTypeExpense">📤 支出</button>
+                            <button class="type-btn" data-type="income" id="ocrTypeIncome">📥 收入</button>
+                        </div>
+                        <div class="confidence-hint" id="ocrConfidence" style="display:none;"></div>
+                        <div class="form-row">
+                            <div class="form-group form-icon-pick">
+                                <label>图标</label>
+                                <button class="icon-pick-btn" id="ocrIconBtn"><span id="ocrIconVal">📌</span></button>
+                            </div>
+                            <div class="form-group" style="flex:3">
+                                <label>名称</label>
+                                <input type="text" id="ocrName" placeholder="自动识别名称">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>金额 <span class="form-hint">(已取优惠后价格)</span></label>
+                            <input type="number" id="ocrAmount" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>日期</label><input type="date" id="ocrDate"></div>
+                            <div class="form-group"><label>时间</label><input type="time" id="ocrTime"></div>
+                            <div class="form-group">
+                                <label>类别</label>
+                                <select id="ocrCategory">
+                                    <option value="餐饮">餐饮</option><option value="交通">交通</option>
+<option value="购物">购物</option><option value="娱乐">娱乐</option>
+<option value="居住">居住</option><option value="医疗">医疗</option>
+<option value="教育">教育</option><option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>备注</label>
+                            <input type="text" id="ocrNote" placeholder="可留空">
+                        </div>
+                        <button class="btn btn-primary btn-full" id="ocrSaveBtn">确认记账</button>
+                    </div>
+                </div>
+
+                <div class="modal-tab-content" id="tabManual">
+                    <div class="type-toggle">
+                        <button class="type-btn active" data-type="expense" id="manualTypeExpense">📤 支出</button>
+                        <button class="type-btn" data-type="income" id="manualTypeIncome">📥 收入</button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-icon-pick">
+                            <label>图标</label>
+                            <button class="icon-pick-btn" id="manualIconBtn"><span id="manualIconVal">📌</span></button>
+                        </div>
+                        <div class="form-group" style="flex:3">
+                            <label>名称</label>
+                            <input type="text" id="manualName" placeholder="例如：全家便利店">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>金额 <span class="required">*</span></label>
+                        <input type="number" id="manualAmount" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>日期</label><input type="date" id="manualDate"></div>
+                        <div class="form-group"><label>时间</label><input type="time" id="manualTime"></div>
+                        <div class="form-group">
+                            <label>类别</label>
+                            <select id="manualCategory">
+                                <option value="餐饮">餐饮</option><option value="交通">交通</option>
+<option value="购物">购物</option><option value="娱乐">娱乐</option>
+<option value="居住">居住</option><option value="医疗">医疗</option>
+<option value="教育">教育</option><option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <input type="text" id="manualNote" placeholder="例如：晚饭">
+                    </div>
+                    <button class="btn btn-primary btn-full" id="manualSaveBtn">确认记账</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModalOverlay">
+        <div class="modal" id="editModal">
+            <div class="modal-header"><h2>编辑账单</h2><button class="modal-close" id="editModalClose">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <div class="type-toggle">
+                    <button class="type-btn" data-type="expense" id="editTypeExpense">📤 支出</button>
+                    <button class="type-btn" data-type="income" id="editTypeIncome">📥 收入</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-icon-pick">
+                        <label>图标</label>
+                        <button class="icon-pick-btn" id="editIconBtn"><span id="editIconVal">📌</span></button>
+                    </div>
+                    <div class="form-group" style="flex:3">
+                        <label>名称</label>
+                        <input type="text" id="editName" placeholder="例如：全家便利店">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>金额</label>
+                    <input type="number" id="editAmount" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>日期</label><input type="date" id="editDate"></div>
+                    <div class="form-group"><label>时间</label><input type="time" id="editTime"></div>
+                    <div class="form-group">
+                        <label>类别</label>
+                        <select id="editCategory">
+                            <option value="餐饮">餐饮</option><option value="交通">交通</option>
+<option value="购物">购物</option><option value="娱乐">娱乐</option>
+<option value="居住">居住</option><option value="医疗">医疗</option>
+<option value="教育">教育</option><option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <input type="text" id="editNote" placeholder="可留空">
+                </div>
+                <div class="form-group" id="editReceiptPreview" style="display:none">
+                    <label>收据照片</label>
+                    <img id="editReceiptImg" src="" style="width:100%;border-radius:10px;max-height:200px;object-fit:contain;">
+                </div>
+                <button class="btn btn-primary btn-full" id="editSaveBtn">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="emoji-popover" id="emojiPopover"><div class="emoji-grid" id="emojiGrid"></div></div>
+    <div id="toast" class="toast"></div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% if page == 'detail' %}
+    <script>
+        showPage('detail'); currentScope = '{{ detail_card }}';
+        document.querySelectorAll('.scope-tab').forEach(function(t) { t.classList.remove('active'); if (t.dataset.scope === '{{ detail_card }}') t.classList.add('active'); });
+        loadDetailPage();
+    </script>
+    {% endif %}
+    {% if page == 'history' %}
+    <script>showPage('history'); loadHistoryMonths();</script>
+    {% endif %}
+</body>
+</html>

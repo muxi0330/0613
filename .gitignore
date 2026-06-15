@@ -1,0 +1,7 @@
+expenses.db
+receipts/
+uploads/
+__pycache__/
+*.pyc
+.env
+easyocr_models/
